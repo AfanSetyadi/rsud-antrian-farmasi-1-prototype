@@ -218,6 +218,34 @@
             document.getElementById('datetime').textContent = formattedDate;
         }
 
+        // Check for daily reset
+        async function checkDailyReset() {
+            try {
+                const response = await fetch('./api/check_and_reset_daily.php');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('Daily reset check:', data.message);
+                    console.log('Current date:', data.current_date);
+                    console.log('Next number will be:', data.next_number);
+                    
+                    // Update current number display if no queues exist for today
+                    if (!data.queue_exists) {
+                        document.getElementById('currentNumber').textContent = 'F000';
+                    }
+                } else {
+                    console.error('Daily reset check failed:', data.error);
+                }
+            } catch (error) {
+                console.error('Error checking daily reset:', error);
+            }
+        }
+
         // Load current queue number from database
         async function loadCurrentNumber() {
             try {
@@ -245,7 +273,8 @@
         updateDateTime();
         setInterval(updateDateTime, 1000);
 
-        // Load current number on page load
+        // Check for daily reset and load current number on page load
+        checkDailyReset();
         loadCurrentNumber();
 
         async function takeNumber() {
