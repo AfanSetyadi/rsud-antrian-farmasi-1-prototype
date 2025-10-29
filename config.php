@@ -1,0 +1,22 @@
+<?php
+// Database configuration
+$host = '10.10.1.90';
+$dbname = 'db_kiosk_antrian_03'; // Sesuaikan dengan nama database Anda
+$username = 'postgres'; // Sesuaikan dengan username database Anda
+$password = 'postgres'; // Sesuaikan dengan password database Anda
+
+try {
+    $pdo = new PDO("pgsql:host=$host;dbname=$dbname", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+} catch(PDOException $e) {
+    die("Connection failed: " . $e->getMessage());
+}
+
+// Print endpoint configuration
+$print_endpoint = 'http://localhost/direct-print/pakai_usb.php';
+
+// Loket configuration
+$id_loket = 11; // ID untuk Farmasi 11
+$id_jenis_antrian = 1; // ID untuk jenis antrian farmasi
+?>
