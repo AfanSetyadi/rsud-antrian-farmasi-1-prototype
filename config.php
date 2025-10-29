@@ -14,7 +14,7 @@ try {
 }
 
 // Print endpoint configuration
-$print_endpoint = 'http://localhost/direct-print/pakai_usb.php';
+$print_endpoint = 'http://10.10.12.166/direct-print/pakai_usb.php';
 
 // Loket configuration
 $id_loket = 1; // ID untuk Farmasi 1

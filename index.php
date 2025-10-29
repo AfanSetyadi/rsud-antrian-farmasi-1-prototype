@@ -63,10 +63,6 @@
                     Ambil Nomor Antrian
                 </button>
 
-                <button class="hidden bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0 px-8 py-5 md:px-10 md:py-6 text-lg md:text-xl font-bold rounded-full cursor-pointer transition-all duration-300 shadow-lg hover:from-blue-600 hover:to-blue-700 hover:-translate-y-1 hover:shadow-xl active:translate-y-0 disabled:bg-gray-500 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none uppercase tracking-wider mt-4" id="printBtn" onclick="printNumber()">
-                    Cetak Antrian
-                </button>
-
                 <div class="hidden mt-5" id="loading">
                     <div class="border-4 border-gray-300 border-t-green-light rounded-full w-10 h-10 animate-spin-custom mx-auto"></div>
                     <p class="mt-2" id="loadingText">Sedang memproses...</p>
@@ -226,13 +222,22 @@
         async function loadCurrentNumber() {
             try {
                 const response = await fetch('./api/get_current_number.php');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 
                 if (data.success) {
                     document.getElementById('currentNumber').textContent = data.currentNumber;
+                } else {
+                    console.error('API returned error:', data.error);
                 }
             } catch (error) {
                 console.error('Error loading current number:', error);
+                // Set default value if API fails
+                document.getElementById('currentNumber').textContent = 'F000';
             }
         }
 
@@ -259,53 +264,20 @@
             loading.style.display = 'block';
 
             try {
-                // Prepare payload for API call
-                const payload = {
-                    action: 'take_number',
-                    timestamp: new Date().toISOString(),
-                    loket: 'FARMASI_1'
-                };
-
-                // Log payload to console for debugging
-                console.log('=== TAKE NUMBER PAYLOAD ===');
-                console.log('Endpoint: ./api/take_number.php');
-                console.log('Method: POST');
-                console.log('Payload:', JSON.stringify(payload, null, 2));
-                console.log('Timestamp:', new Date().toLocaleString('id-ID', {timeZone: 'Asia/Jakarta'}));
-                console.log('===========================');
-
                 // Call API to generate new queue number and print
                 const response = await fetch('./api/take_number.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({})
                 });
 
-                const data = await response.json();
-
-                // Log response from API
-                console.log('=== API RESPONSE ===');
-                console.log('Response:', JSON.stringify(data, null, 2));
-                console.log('Status:', response.status);
-                console.log('===================');
-
-                // Log print data that was sent to printer (if available in response)
-                if (data.success && data.queueNumber) {
-                    const printData = {
-                        id_jenis_antrian: "1", // Default value from config
-                        no_antrian: data.queueNumber
-                    };
-                    
-                    console.log('=== DATA SENT TO PRINTER ===');
-                    console.log('Print Data:', JSON.stringify(printData, null, 2));
-                    console.log('Queue Number:', data.queueNumber);
-                    console.log('Print Success:', data.printSuccess);
-                    console.log('Print Errors:', data.printErrors);
-                    console.log('Timestamp:', new Date().toLocaleString('id-ID', {timeZone: 'Asia/Jakarta'}));
-                    console.log('============================');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
+
+                const data = await response.json();
 
                 if (data.success) {
                     // Update display with new number
@@ -318,8 +290,26 @@
                         successMsg.textContent = 'Berhasil! Nomor antrian telah dicetak 2x. Silahkan ambil tiket Anda.';
                         successMsg.style.display = 'block';
                     } else {
-                        successMsg.textContent = 'Nomor antrian berhasil dibuat, namun ada masalah dengan printer. Nomor: ' + data.queueNumber;
+                        // Show detailed print error information
+                        let errorDetails = '';
+                        if (data.printDetails) {
+                            if (!data.printDetails.first_print.success) {
+                                const error1 = data.printDetails.first_print.error || 'Unknown error';
+                                const httpCode1 = data.printDetails.first_print.http_code || 'N/A';
+                                errorDetails += `Print 1: ${error1} (HTTP: ${httpCode1}). `;
+                            }
+                            if (!data.printDetails.second_print.success) {
+                                const error2 = data.printDetails.second_print.error || 'Unknown error';
+                                const httpCode2 = data.printDetails.second_print.http_code || 'N/A';
+                                errorDetails += `Print 2: ${error2} (HTTP: ${httpCode2}).`;
+                            }
+                        }
+                        
+                        successMsg.textContent = 'Nomor antrian berhasil dibuat (' + data.queueNumber + '), namun ada masalah dengan printer. ' + errorDetails;
                         successMsg.style.display = 'block';
+                        
+                        // Log detailed print information for debugging
+                        console.log('Print Details:', data.printDetails);
                     }
 
                     // Re-enable button after 3 seconds
@@ -332,10 +322,6 @@
                 }
 
             } catch (error) {
-                console.error('=== ERROR ===');
-                console.error('Error details:', error);
-                console.error('=============');
-
                 // Show error message
                 loading.style.display = 'none';
                 errorMsg.textContent = 'Error! Gagal mengambil nomor antrian: ' + error.message;
