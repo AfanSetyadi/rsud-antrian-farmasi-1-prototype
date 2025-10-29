@@ -259,15 +259,53 @@
             loading.style.display = 'block';
 
             try {
+                // Prepare payload for API call
+                const payload = {
+                    action: 'take_number',
+                    timestamp: new Date().toISOString(),
+                    loket: 'FARMASI_1'
+                };
+
+                // Log payload to console for debugging
+                console.log('=== TAKE NUMBER PAYLOAD ===');
+                console.log('Endpoint: ./api/take_number.php');
+                console.log('Method: POST');
+                console.log('Payload:', JSON.stringify(payload, null, 2));
+                console.log('Timestamp:', new Date().toLocaleString('id-ID', {timeZone: 'Asia/Jakarta'}));
+                console.log('===========================');
+
                 // Call API to generate new queue number and print
                 const response = await fetch('./api/take_number.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                    }
+                    },
+                    body: JSON.stringify(payload)
                 });
 
                 const data = await response.json();
+
+                // Log response from API
+                console.log('=== API RESPONSE ===');
+                console.log('Response:', JSON.stringify(data, null, 2));
+                console.log('Status:', response.status);
+                console.log('===================');
+
+                // Log print data that was sent to printer (if available in response)
+                if (data.success && data.queueNumber) {
+                    const printData = {
+                        id_jenis_antrian: "1", // Default value from config
+                        no_antrian: data.queueNumber
+                    };
+                    
+                    console.log('=== DATA SENT TO PRINTER ===');
+                    console.log('Print Data:', JSON.stringify(printData, null, 2));
+                    console.log('Queue Number:', data.queueNumber);
+                    console.log('Print Success:', data.printSuccess);
+                    console.log('Print Errors:', data.printErrors);
+                    console.log('Timestamp:', new Date().toLocaleString('id-ID', {timeZone: 'Asia/Jakarta'}));
+                    console.log('============================');
+                }
 
                 if (data.success) {
                     // Update display with new number
@@ -294,7 +332,9 @@
                 }
 
             } catch (error) {
-                console.error('Error:', error);
+                console.error('=== ERROR ===');
+                console.error('Error details:', error);
+                console.error('=============');
 
                 // Show error message
                 loading.style.display = 'none';

@@ -14,7 +14,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 try {
     // Get JSON input
-    $input = json_decode(file_get_contents('php://input'), true);
+    $rawInput = file_get_contents('php://input');
+    $input = json_decode($rawInput, true);
+    
+    // Log incoming request payload
+    error_log("=== PRINT REQUEST DEBUG ===");
+    error_log("Request Method: " . $_SERVER['REQUEST_METHOD']);
+    error_log("Request Headers: " . json_encode(getallheaders(), JSON_PRETTY_PRINT));
+    error_log("Raw Input: " . $rawInput);
+    error_log("Parsed Input: " . json_encode($input, JSON_PRETTY_PRINT));
+    error_log("Timestamp: " . date('Y-m-d H:i:s'));
+    error_log("===========================");
     
     if (!isset($input['queueNumber'])) {
         throw new Exception('Queue number is required');
@@ -24,7 +34,7 @@ try {
     
     // Verify queue number exists in database
     $stmt = $pdo->prepare("
-        SELECT id, no_antrian 
+        SELECT id, no_antrian, id_jenis_antrian 
         FROM antrian 
         WHERE no_antrian = ? AND id_loket = ? AND DATE(tanggal) = ?
         ORDER BY id DESC 
@@ -43,10 +53,20 @@ try {
         'no_antrian' => $queueNumber
     ];
 
+    // Log print data preparation to console for debugging
+    error_log("=== PRINT DATA PREPARATION ===");
+    error_log("Queue from DB: " . json_encode($queue, JSON_PRETTY_PRINT));
+    error_log("Print Data Array: " . json_encode($printData, JSON_PRETTY_PRINT));
+    error_log("id_jenis_antrian: " . ($queue['id_jenis_antrian'] ?? 'NULL'));
+    error_log("no_antrian: " . $queueNumber);
+    error_log("Timestamp: " . date('Y-m-d H:i:s'));
+    error_log("==============================");
+
     // Log payload to console for debugging
     error_log("=== PRINT PAYLOAD DEBUG ===");
     error_log("Print Endpoint: " . $print_endpoint);
     error_log("Payload: " . json_encode($printData, JSON_PRETTY_PRINT));
+    error_log("Queue Data: " . json_encode($queue, JSON_PRETTY_PRINT));
     error_log("Timestamp: " . date('Y-m-d H:i:s'));
     error_log("===========================");
 
@@ -61,6 +81,14 @@ try {
     
     $printResult1 = curl_exec($ch);
     $printError1 = curl_error($ch);
+    $httpCode1 = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    
+    // Log first print attempt
+    error_log("=== FIRST PRINT ATTEMPT ===");
+    error_log("HTTP Code: " . $httpCode1);
+    error_log("Result: " . $printResult1);
+    error_log("Error: " . ($printError1 ?: 'None'));
+    error_log("===========================");
     
     // Wait a moment before second print
     sleep(1);
@@ -68,6 +96,14 @@ try {
     // Second print
     $printResult2 = curl_exec($ch);
     $printError2 = curl_error($ch);
+    $httpCode2 = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    
+    // Log second print attempt
+    error_log("=== SECOND PRINT ATTEMPT ===");
+    error_log("HTTP Code: " . $httpCode2);
+    error_log("Result: " . $printResult2);
+    error_log("Error: " . ($printError2 ?: 'None'));
+    error_log("============================");
     
     curl_close($ch);
     
@@ -84,8 +120,8 @@ try {
         $stmt->execute([$queue['id']]);
     }
     
-    // Return response
-    echo json_encode([
+    // Prepare response
+    $response = [
         'success' => true,
         'queueNumber' => $queueNumber,
         'timestamp' => date('c'),
@@ -96,8 +132,20 @@ try {
         'printErrors' => [
             'first' => $printError1,
             'second' => $printError2
+        ],
+        'printResults' => [
+            'first' => ['httpCode' => $httpCode1, 'result' => $printResult1],
+            'second' => ['httpCode' => $httpCode2, 'result' => $printResult2]
         ]
-    ]);
+    ];
+    
+    // Log final response
+    error_log("=== FINAL RESPONSE ===");
+    error_log("Response: " . json_encode($response, JSON_PRETTY_PRINT));
+    error_log("======================");
+    
+    // Return response
+    echo json_encode($response);
     
 } catch (Exception $e) {
     http_response_code(500);

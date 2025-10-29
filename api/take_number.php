@@ -50,6 +50,19 @@ try {
         'no_antrian' => $queueNumber
     ];
 
+    // Log print data preparation to console for debugging (sama seperti di print_number.php)
+    error_log("=== PRINT DATA PREPARATION ===");
+    error_log("Generated Queue Data: " . json_encode([
+        'id' => 'NEW_QUEUE',
+        'no_antrian' => $queueNumber,
+        'id_jenis_antrian' => $id_jenis_antrian
+    ], JSON_PRETTY_PRINT));
+    error_log("Print Data Array: " . json_encode($printData, JSON_PRETTY_PRINT));
+    error_log("id_jenis_antrian: " . $id_jenis_antrian);
+    error_log("no_antrian: " . $queueNumber);
+    error_log("Timestamp: " . date('Y-m-d H:i:s'));
+    error_log("==============================");
+
     // Log payload to console for debugging
     error_log("=== TAKE NUMBER - PRINT PAYLOAD DEBUG ===");
     error_log("Print Endpoint: " . $print_endpoint);
