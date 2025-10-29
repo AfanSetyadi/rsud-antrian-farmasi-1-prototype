@@ -33,7 +33,7 @@ $dbname = 'farmasi_antrian';   // Nama database
 $username = 'postgres';        // Username database
 $password = '';                // Password database
 $print_endpoint = 'http://localhost/direct-print/pakai_usb.php'; // Endpoint printer
-$id_loket = 11;               // ID loket (Farmasi 11)
+$id_loket = 1;               // ID loket (Farmasi 1)
 $id_jenis_antrian = 1;        // ID jenis antrian
 ```
 

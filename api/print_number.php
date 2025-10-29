@@ -42,7 +42,14 @@ try {
         'id_jenis_antrian' => $queue['id_jenis_antrian'],
         'no_antrian' => $queueNumber
     ];
-    
+
+    // Log payload to console for debugging
+    error_log("=== PRINT PAYLOAD DEBUG ===");
+    error_log("Print Endpoint: " . $print_endpoint);
+    error_log("Payload: " . json_encode($printData, JSON_PRETTY_PRINT));
+    error_log("Timestamp: " . date('Y-m-d H:i:s'));
+    error_log("===========================");
+
     // Send to print endpoint (first print)
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $print_endpoint);

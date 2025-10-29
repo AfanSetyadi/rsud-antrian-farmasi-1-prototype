@@ -17,6 +17,6 @@ try {
 $print_endpoint = 'http://localhost/direct-print/pakai_usb.php';
 
 // Loket configuration
-$id_loket = 11; // ID untuk Farmasi 11
+$id_loket = 1; // ID untuk Farmasi 1
 $id_jenis_antrian = 1; // ID untuk jenis antrian farmasi
 ?>
