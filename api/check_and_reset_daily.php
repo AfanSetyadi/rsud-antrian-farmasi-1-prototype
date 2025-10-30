@@ -12,16 +12,25 @@ try {
     $today = $now->format('Y-m-d');
     $currentTime = $now->format('H:i:s');
     
-    // Check if there are any queues for today
+    // Get the latest queue regardless of date
     $stmt = $pdo->prepare("
-        SELECT no_antrian, tanggal, COUNT(*) as count
+        SELECT no_antrian, tanggal, DATE(tanggal) as queue_date
         FROM antrian 
-        WHERE id_loket = ? AND DATE(tanggal) = ?
+        WHERE id_loket = ?
         ORDER BY id DESC 
         LIMIT 1
     ");
-    $stmt->execute([$id_loket, $today]);
-    $result = $stmt->fetch();
+    $stmt->execute([$id_loket]);
+    $lastQueue = $stmt->fetch();
+    
+    // Count total queues for today
+    $countStmt = $pdo->prepare("
+        SELECT COUNT(*) as count
+        FROM antrian 
+        WHERE id_loket = ? AND DATE(tanggal) = ?
+    ");
+    $countStmt->execute([$id_loket, $today]);
+    $countResult = $countStmt->fetch();
     
     $response = [
         'success' => true,
@@ -30,27 +39,47 @@ try {
         'timezone' => 'Asia/Jakarta'
     ];
     
-    if ($result && $result['count'] > 0) {
-        // There are queues for today
-        $response['queue_exists'] = true;
-        $response['current_number'] = $result['no_antrian'];
-        $response['last_queue_time'] = $result['tanggal'];
-        $response['total_queues_today'] = $result['count'];
-        $response['message'] = 'Queue system is active for today';
-        $response['next_number'] = 'F' . str_pad((intval(substr($result['no_antrian'], 1)) + 1), 3, '0', STR_PAD_LEFT);
+    // Check if we have any queue data and if it's from a different date
+    if ($lastQueue) {
+        $lastQueueDate = $lastQueue['queue_date'];
+        $isNewDay = ($lastQueueDate !== $today);
+        
+        $response['last_queue_date'] = $lastQueueDate;
+        $response['is_new_day'] = $isNewDay;
+        
+        if ($isNewDay) {
+            // Different date - reset to start from F001 (but keep old data)
+            $response['queue_exists'] = false;
+            $response['current_number'] = 'F000';
+            $response['last_queue_time'] = $lastQueue['tanggal'];
+            $response['total_queues_today'] = 0;
+            $response['message'] = 'New day detected. Queue will reset to F001 (old data preserved)';
+            $response['next_number'] = 'F001';
+            $response['reset_status'] = 'daily_reset_triggered';
+        } else {
+            // Same date - continue from where we left off
+            $response['queue_exists'] = true;
+            $response['current_number'] = $lastQueue['no_antrian'];
+            $response['last_queue_time'] = $lastQueue['tanggal'];
+            $response['total_queues_today'] = $countResult['count'];
+            $response['message'] = 'Queue system is active for today';
+            $response['next_number'] = 'F' . str_pad((intval(substr($lastQueue['no_antrian'], 1)) + 1), 3, '0', STR_PAD_LEFT);
+            $response['reset_status'] = 'continuing_same_day';
+        }
     } else {
-        // No queues for today - system will start fresh
+        // No queue data at all - start fresh
         $response['queue_exists'] = false;
         $response['current_number'] = 'F000';
         $response['last_queue_time'] = null;
         $response['total_queues_today'] = 0;
-        $response['message'] = 'No queues for today. System ready to start from F001';
+        $response['message'] = 'No queue data found. System ready to start from F001';
         $response['next_number'] = 'F001';
+        $response['is_new_day'] = true;
+        $response['reset_status'] = 'no_data_found';
     }
     
     // Check if we're past midnight (new day detection)
-    $response['is_new_day'] = true; // Always true since we're checking for today's date
-    $response['reset_status'] = 'automatic_daily_reset_active';
+    $response['reset_status_info'] = 'Date comparison based reset system active';
     
     echo json_encode($response);
     

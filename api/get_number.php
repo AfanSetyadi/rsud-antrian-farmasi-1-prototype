@@ -13,25 +13,36 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 try {
-    // Get the latest queue number for today
+    // Get the latest queue number (regardless of date)
+    date_default_timezone_set('Asia/Jakarta');
     $today = date('Y-m-d');
+    
+    // Get the latest queue regardless of date
     $stmt = $pdo->prepare("
-        SELECT no_antrian 
+        SELECT no_antrian, DATE(tanggal) as queue_date
         FROM antrian 
-        WHERE id_loket = ? AND DATE(tanggal) = ? 
+        WHERE id_loket = ?
         ORDER BY id DESC 
         LIMIT 1
     ");
-    $stmt->execute([$id_loket, $today]);
+    $stmt->execute([$id_loket]);
     $lastQueue = $stmt->fetch();
     
     // Generate new queue number
     if ($lastQueue) {
-        // Extract number from last queue (e.g., F048 -> 48)
-        $lastNumber = intval(substr($lastQueue['no_antrian'], 1));
-        $newNumber = $lastNumber + 1;
+        $lastQueueDate = $lastQueue['queue_date'];
+        $isNewDay = ($lastQueueDate !== $today);
+        
+        if ($isNewDay) {
+            // Different date - start from 1 (reset)
+            $newNumber = 1;
+        } else {
+            // Same date - continue from last number
+            $lastNumber = intval(substr($lastQueue['no_antrian'], 1));
+            $newNumber = $lastNumber + 1;
+        }
     } else {
-        // Start from 1 if no queue today
+        // No queue data at all - start from 1
         $newNumber = 1;
     }
     

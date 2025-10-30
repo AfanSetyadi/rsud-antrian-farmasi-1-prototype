@@ -7,9 +7,9 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="theme-color" content="#03a9f4" />
-    <meta name="description" content="Sistem Antrian Farmasi 1 RSUD R.T. Notopuro Sidoarjo" />
+    <meta name="description" content="Sistem Antrian Farmasi 5 RSUD R.T. Notopuro Sidoarjo" />
     <link rel="apple-touch-icon" href="./icon.png" />
-    <title>Antrian Farmasi 1 RSUD R.T. Notopuro Sidoarjo</title>
+    <title>Antrian 5 RSUD R.T. Notopuro Sidoarjo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -37,7 +37,7 @@
     <div id="root">
         <div class="text-center w-11/12 p-8 md:p-10 bg-white bg-opacity-95 rounded-3xl shadow-2xl text-gray-800">
             <div class="mb-8">
-                <h1 class="text-3xl md:text-4xl font-bold text-green-hospital mb-3 drop-shadow-sm">FARMASI 1</h1>
+                <h1 class="text-3xl md:text-4xl font-bold text-green-hospital mb-3 drop-shadow-sm">FARMASI 5</h1>
                 <h2 class="text-xl md:text-3xl text-green-hospital mb-2 font-bold">RSUD R.T. NOTOPURO</h2>
                 <h3 class="text-lg md:text-2xl text-green-hospital mb-4 font-bold">SIDOARJO</h3>
                 <div class="text-base md:text-lg text-gray-600 mb-8 font-medium" id="datetime">

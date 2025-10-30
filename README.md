@@ -1,6 +1,6 @@
-# Sistem Antrian Farmasi 11 RSUD R.T. Notopuro Sidoarjo
+# Sistem Antrian Farmasi 5 RSUD R.T. Notopuro Sidoarjo
 
-Sistem antrian digital untuk Farmasi 11 dengan integrasi database PostgreSQL dan printer thermal.
+Sistem antrian digital untuk Farmasi 5 dengan integrasi database PostgreSQL dan printer thermal.
 
 ## Fitur
 
@@ -33,7 +33,7 @@ $dbname = 'farmasi_antrian';   // Nama database
 $username = 'postgres';        // Username database
 $password = '';                // Password database
 $print_endpoint = 'http://localhost/direct-print/pakai_usb.php'; // Endpoint printer
-$id_loket = 1;               // ID loket (Farmasi 1)
+$id_loket = 1;               // ID loket (Farmasi 5)
 $id_jenis_antrian = 1;        // ID jenis antrian
 ```
 

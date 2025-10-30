@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 try {
     // Get current date
+    date_default_timezone_set('Asia/Jakarta');
     $today = date('Y-m-d');
     
     // Check if there are any queues for today

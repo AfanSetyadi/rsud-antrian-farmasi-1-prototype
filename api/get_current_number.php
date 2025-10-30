@@ -13,30 +13,58 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 try {
-    // Get the latest queue number for today
+    // Get the latest queue number (regardless of date)
+    date_default_timezone_set('Asia/Jakarta');
     $today = date('Y-m-d');
+    
+    // Get the latest queue regardless of date
     $stmt = $pdo->prepare("
-        SELECT no_antrian, tanggal 
+        SELECT no_antrian, tanggal, DATE(tanggal) as queue_date
         FROM antrian 
-        WHERE id_loket = ? AND DATE(tanggal) = ? 
+        WHERE id_loket = ?
         ORDER BY id DESC 
         LIMIT 1
     ");
-    $stmt->execute([$id_loket, $today]);
-    $currentQueue = $stmt->fetch();
+    $stmt->execute([$id_loket]);
+    $lastQueue = $stmt->fetch();
     
-    if ($currentQueue) {
-        echo json_encode([
-            'success' => true,
-            'currentNumber' => $currentQueue['no_antrian'],
-            'timestamp' => $currentQueue['tanggal']
-        ]);
+    if ($lastQueue) {
+        $lastQueueDate = $lastQueue['queue_date'];
+        $isNewDay = ($lastQueueDate !== $today);
+        
+        if ($isNewDay) {
+            // Different date - show F000 to indicate reset needed
+            echo json_encode([
+                'success' => true,
+                'currentNumber' => 'F000',
+                'timestamp' => null,
+                'is_new_day' => true,
+                'last_queue_date' => $lastQueueDate,
+                'current_date' => $today,
+                'message' => 'New day detected - queue will reset to F001'
+            ]);
+        } else {
+            // Same date - show current number
+            echo json_encode([
+                'success' => true,
+                'currentNumber' => $lastQueue['no_antrian'],
+                'timestamp' => $lastQueue['tanggal'],
+                'is_new_day' => false,
+                'last_queue_date' => $lastQueueDate,
+                'current_date' => $today,
+                'message' => 'Continuing same day queue'
+            ]);
+        }
     } else {
-        // No queue for today yet, return default
+        // No queue data at all
         echo json_encode([
             'success' => true,
             'currentNumber' => 'F000',
-            'timestamp' => null
+            'timestamp' => null,
+            'is_new_day' => true,
+            'last_queue_date' => null,
+            'current_date' => $today,
+            'message' => 'No queue data found - will start from F001'
         ]);
     }
     
